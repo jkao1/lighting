@@ -85,8 +85,11 @@ func FillPolygon(screen [][][]int, p0, p1, p2 []float64) {
 			if d2 != 0 {
 				dx1 = (top[0] - mid[0]) / d2
 				dz1 = (top[2] - mid[2]) / d2
-				x1, z1 = mid[0], mid[2]
+			} else {
+				dx1 = 0
+				dz1 = 0
 			}
+			x1, z1 = mid[0], mid[2]
 		}
 	}
 }
