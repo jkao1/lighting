@@ -13,44 +13,56 @@ var s = rand.NewSource(time.Now().UnixNano())
 var r = rand.New(s)
 
 var ZBuffer [][]float64 = NewZBuffer()
+var STEPS = 50
 
 var DefaultDrawColor []int = []int{0, 0, 0}
 
 // DrawLines draws an edge matrix onto a screen.
-func DrawLines(edges [][]float64, screen [][][]int) {
+func DrawLines(edges [][]float64, screen [][][]int, zbuffer [][]float64) {
 	if len(edges) % 2 != 0 {
 		fmt.Println("DrawLines invalid.")
 	}
-	PrintMatrix(edges)
 	for i := 0; i < len(edges[0])-1; i += 2 {
 		point := ExtractColumn(edges, i)
 		nextPoint := ExtractColumn(edges, i+1)
 		x0, y0, z0 := point[0], point[1], point[2]
 		x1, y1, z1 := nextPoint[0], nextPoint[1], nextPoint[2]
-		DrawLine(screen, int(x0), int(y0), z0, int(x1), int(y1), z1)
+		DrawLine(screen, int(x0), int(y0), z0, int(x1), int(y1), z1, DefaultDrawColor)
 	}
 }
 
 // DrawPolygons draws a polygon matrix onto a screen.
-func DrawPolygons(polygons [][]float64, screen [][][]int) {
+func DrawPolygons(
+	polygons [][]float64,
+	screen [][][]int,
+	zbuffer [][]float64,
+	view, ambient []float64,
+	light [][]float64,
+	areflect, dreflect, sreflect []float64,
+) {
 	for i := 0; i < len(polygons[0])-2; i += 3 {
 		point0 := ExtractColumn(polygons, i)
 		point1 := ExtractColumn(polygons, i+1)
 		point2 := ExtractColumn(polygons, i+2)
 
-		A := vectorSubtract(point1, point0)[:2]
-		B := vectorSubtract(point2, point0)[:2]
-		if A[0] * B[1] - A[1] * B[0] <= 0 {
+		A := vectorSubtract(point1, point0)
+		B := vectorSubtract(point2, point0)
+		normal := []float64{
+			A[1] * B[2] - A[2] * B[1],
+			A[2] * B[0] - A[0] * B[2],
+			A[0] * B[1] - A[1] * B[0],
+		}
+		if normal[2] <= 0 {
 			continue
 		}
 
-		RandomizeColor()
-		FillPolygon(screen, point0, point1, point2)
+		color := Lighting(normal, view, ambient, light, areflect, dreflect, sreflect)
+		FillPolygon(screen, point0, point1, point2, color)
 	}
 }
 
 // FillPolygon fills a polygon on a screen via scanline.
-func FillPolygon(screen [][][]int, p0, p1, p2 []float64) {
+func FillPolygon(screen [][][]int, p0, p1, p2 []float64, color []int) {
 	top, mid, btm := sortedPolygonPoints([][]float64{p0, p1, p2})
 
 	x0, x1 := btm[0], btm[0]
@@ -73,7 +85,7 @@ func FillPolygon(screen [][][]int, p0, p1, p2 []float64) {
 
 	flipped := false
 	for y <= int(top[1]) {
-		DrawLine(screen, int(x0), y, z0, int(x1), y, z1)
+		DrawLine(screen, int(x0), y, z0, int(x1), y, z1, color)
 		x0 += dx0
 		x1 += dx1
 		z0 += dz0
@@ -235,7 +247,7 @@ func AddBox(m [][]float64, a ...float64) {
 // AddSphere adds all the points for a sphere with center (cx, cy, cz) and
 // radius r.
 func AddSphere(m [][]float64, a ...float64) {
-	step := 10
+	step := STEPS
 	points := GenerateSphere(a[0], a[1], a[2], a[3], step)
 	latStop, lngStop := step, step
 
@@ -284,7 +296,7 @@ func GenerateSphere(cx, cy, cz, r float64, step int) [][]float64 {
 // AddTorus adds all the points required to make a torus with center
 // (cx, cy, cz) and radii r1 and r2.
 func AddTorus(m [][]float64, a ...float64) {
-	step := 20
+	step := STEPS
 	points := GenerateTorus(a[0], a[1], a[2], a[3], a[4], step)
 
 	for lat := 0; lat < step; lat++ {
@@ -340,6 +352,7 @@ func DrawLine(
 	screen [][][]int,
 	x0, y0 int, z0 float64,
 	x1, y1 int, z1 float64,
+	color []int,
 ) {
 	if x1 < x0 {
 		x0, x1 = x1, x0
@@ -362,7 +375,7 @@ func DrawLine(
 			zInc = float64(y1-y0) / (z1-z0)
 		}
 		for y <= y1 {
-			plot(screen, x, y, z)
+			plot(screen, x, y, z, color)
 			y++
 			z += zInc
 		}
@@ -378,7 +391,7 @@ func DrawLine(
 		d = 2*A + B
 		dz = (z1-z0) / float64(x1-x0)
 		for x <= x1 && y <= y1 {
-			plot(screen, x, y, z)
+			plot(screen, x, y, z, color)
 			if d > 0 {
 				y++
 				d += 2 * B
@@ -393,7 +406,7 @@ func DrawLine(
 		d = A + 2*B
 		dz = (z1-z0) / float64(y1-y0)
 		for x <= x1 && y <= y1 {
-			plot(screen, x, y, z)
+			plot(screen, x, y, z, color)
 			if d < 0 {
 				x++
 				d += 2 * A
@@ -408,7 +421,7 @@ func DrawLine(
 		d = 2*A - B
 		dz = (z1-z0) / float64(x1-x0)
 		for x <= x1 && y >= y1 {
-			plot(screen, x, y, z)
+			plot(screen, x, y, z, color)
 			if d < 0 {
 				y--
 				d -= 2 * B
@@ -423,7 +436,7 @@ func DrawLine(
 		d = A - 2*B
 		dz = (z1-z0) / float64(y1-y0)
 		for x <= x1 && y >= y1 {
-			plot(screen, x, y, z)
+			plot(screen, x, y, z, color)
 			if d > 0 {
 				x++
 				d += 2 * A
@@ -456,7 +469,7 @@ func toFixed(num float64, precision int) float64 {
 }
 
 // plot draws a point (x, y) onto a screen with the default draw color.
-func plot(screen [][][]int, x, y int, z float64) {
+func plot(screen [][][]int, x, y int, z float64, color []int) {
 	y = YRES -  y
 	if !(x >= 0 && x < XRES && y >= 0 && y < YRES) {
 		return
@@ -464,7 +477,7 @@ func plot(screen [][][]int, x, y int, z float64) {
 
 	z = toFixed(z, 3)
 	if z >= ZBuffer[y][x] {
-		screen[y][x] = DefaultDrawColor[:]
+		screen[y][x] = color
 		ZBuffer[y][x] = z
 	}
 }
@@ -480,6 +493,7 @@ func DrawLineFromParams(screen [][][]int, params ...float64) {
 			int(params[3]),
 			int(params[4]),
 			float64(params[5]),
+			DefaultDrawColor,
 		)
 	}
 }

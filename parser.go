@@ -43,7 +43,12 @@ The file follows the following format:
 func ParseFile(filename string,
 	transform [][]float64,
 	edges [][]float64,
-	screen [][][]int) {
+	screen [][][]int,
+	zbuffer [][]float64,
+	view, ambient []float64,
+	light [][]float64,
+	areflect, dreflect, sreflect []float64,
+) {
 
 	file, err := os.Open(filename)
 	if (err != nil) {
@@ -139,9 +144,9 @@ func ParseFile(filename string,
 		}
 		MultiplyMatrices(rcs.Peek(), &temp)
 		if line == "box" || line == "sphere" || line == "torus" || line == "triangle" {
-			DrawPolygons(temp, screen)
+			DrawPolygons(temp, screen, zbuffer, view, ambient, light, areflect, dreflect, sreflect)
 		} else {
-			DrawLines(temp, screen)
+			DrawLines(temp, screen, zbuffer)
 		}
 	}
 
