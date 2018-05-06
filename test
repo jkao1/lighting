@@ -3,8 +3,11 @@ rotate
 x -30
 rotate
 y -20
-box
+sphere
 300 200 0 100 100 100
-box
-300 320 0 100 100 100
+pop
+scale
+1.5 1 1
+torus
+250 250 0 20 100
 display
