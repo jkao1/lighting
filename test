@@ -1,13 +1,118 @@
 push
+move
+0 -100 0
+push
 rotate
-x -30
+x -90
 rotate
-y -20
-sphere
-300 200 0 100 100 100
-pop
+y 90
 scale
-1.5 1 1
+1.5 1.5 2.5
+move
+-150 0 100
 torus
-250 250 0 20 100
+0 0 0 7 50
+box
+-32 0 -38 66 -10 2
+box
+-40 0 -20 84 -10 2
+box
+-49 0 0 100 -10 2
+box
+-40 0 20 84 -10 2
+box
+-32 0 40 66 -10 2
+box
+0 0 48 3 -10 100
+pop
+move
+160 400 0
+sphere
+0 0 0 65 65 65
+sphere
+180 0 0 65 65 65
+pop
+push
+move
+70 400 100
+push
+triangle
+0 0 0 200 -100 0 150 0 0
+move
+50 20 0
+triangle
+0 0 0 200 -100 0 150 0 0
+move
+50 -40 0
+triangle
+0 0 0 200 -100 0 150 0 0
+pop
+push
+move
+-20 40 0
+triangle
+0 0 0 200 -100 0 150 0 0
+pop
+push
+move
+-30 -10 0
+triangle
+0 0 0 200 -100 0 150 0 0
+pop
+pop
+push
+move
+120 20 0
+move
+70 400 100
+push
+triangle
+0 0 0 200 -100 0 150 0 0
+move
+50 20 0
+triangle
+0 0 0 200 -100 0 150 0 0
+move
+50 -40 0
+triangle
+0 0 0 200 -100 0 150 0 0
+pop
+push
+move
+-10 -10 0
+triangle
+0 0 0 200 -100 0 150 0 0
+pop
+push
+move
+-30 -10 0
+triangle
+0 0 0 200 -100 0 150 0 0
+move
+70 400 100
+push
+triangle
+0 0 0 200 -100 0 150 0 0
+move
+50 20 0
+triangle
+0 0 0 200 -100 0 150 0 0
+move
+50 -40 0
+triangle
+0 0 0 200 -100 0 150 0 0
+pop
+push
+move
+-20 40 0
+triangle
+0 0 0 200 -100 0 150 0 0
+pop
+push
+move
+-30 -10 0
+triangle
+0 0 0 200 -100 0 150 0 0
 display
+save
+orange.png
